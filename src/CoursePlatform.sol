@@ -20,11 +20,7 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
     constructor() ERC721("Course NFT", "COURSE") {}
 
     // Create a new course
-    function createCourse(
-        uint256 courseId,
-        string memory title,
-        uint256 price
-    ) external onlyOwner {
+    function createCourse(uint256 courseId, string memory title, uint256 price) external onlyOwner {
         courses[courseId] = Course(title, price, address(this));
     }
 
@@ -46,25 +42,14 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
 
     // Sell a course
     function sellCourse(uint256 courseId, uint256 price) external {
-        require(
-            _isApprovedOrOwner(msg.sender, courseId),
-            "Not owner of course"
-        );
+        require(_isApprovedOrOwner(msg.sender, courseId), "Not owner of course");
 
         courses[courseId].price = price;
     }
 
     // Override _beforeTokenTransfer to ensure only course owner can transfer
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal override {
-        require(
-            from == address(0) || from == courses[tokenId].owner,
-            "Can only transfer if you own the course"
-        );
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override {
+        require(from == address(0) || from == courses[tokenId].owner, "Can only transfer if you own the course");
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 }
