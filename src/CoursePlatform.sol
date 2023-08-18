@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity 0.8.21;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract CoursePlatform is ERC721Enumerable, Ownable {
     // Course struct
@@ -19,7 +20,11 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
     constructor() ERC721("Course NFT", "COURSE") {}
 
     // Create a new course
-    function createCourse(uint256 courseId, string memory title, uint256 price) external onlyOwner {
+    function createCourse(
+        uint256 courseId,
+        string memory title,
+        uint256 price
+    ) external onlyOwner {
         courses[courseId] = Course(title, price, address(this));
     }
 
@@ -41,13 +46,21 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
 
     // Sell a course
     function sellCourse(uint256 courseId, uint256 price) external {
-        require(_isApprovedOrOwner(msg.sender, courseId), "Not owner of course");
-        
+        require(
+            _isApprovedOrOwner(msg.sender, courseId),
+            "Not owner of course"
+        );
+
         courses[courseId].price = price;
     }
 
     // Override _beforeTokenTransfer to ensure only course owner can transfer
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) override internal  {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override {
         require(
             from == address(0) || from == courses[tokenId].owner,
             "Can only transfer if you own the course"
