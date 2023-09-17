@@ -6,6 +6,9 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract CoursePlatform is ERC721Enumerable, Ownable {
+    //Variables
+    uint256 public constant MINIMUM_USD = 5e18;
+
     //Structures
     struct Course {
         string title;
@@ -35,12 +38,23 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
         string memory title,
         uint256 price,
         uint256 royaltyPercentage,
-        string description,
-        string imageURL,
-        string[] ipfsCIDs
+        string memory description,
+        string memory imageURL,
+        string[] memory ipfsCIDs
     ) external onlyOwner {
-        courses[courseId] = Course(title, price, royaltyPercentage, address(this), address(this));
-        CourseMetadatas[courseId] = CourseMetadatas(title, description, imageURL, ipfsCIDs);
+        courses[courseId] = Course(
+            title,
+            price,
+            royaltyPercentage,
+            address(this),
+            address(this)
+        );
+        CourseMetadatas[courseId] = CourseMetadata(
+            title,
+            description,
+            imageURL,
+            ipfsCIDs
+        );
     }
 
     // Buy a course
@@ -51,7 +65,8 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
 
         // Transfer royalties to the creator
         if (course.creator != course.owner) {
-            uint256 royaltyAmount = (course.price * course.royaltyPercentage) / 100;
+            uint256 royaltyAmount = (course.price * course.royaltyPercentage) /
+                100;
             payable(course.creator).transfer(royaltyAmount);
         }
 
@@ -67,23 +82,35 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
 
     // Sell a course
     function sellCourse(uint256 courseId, uint256 price) external {
-        require(_isApprovedOrOwner(msg.sender, courseId), "Not owner of course");
+        require(
+            _isApprovedOrOwner(msg.sender, courseId),
+            "Not owner of course"
+        );
 
         courses[courseId].price = price;
     }
 
     // Resell a course
     function resellCourse(uint256 courseId, uint256 resellPrice) external {
-        require(_isApprovedOrOwner(msg.sender, courseId), "Not owner of course");
+        require(
+            _isApprovedOrOwner(msg.sender, courseId),
+            "Not owner of course"
+        );
 
         courses[courseId].price = resellPrice;
     }
 
     // Mint course NFTs
     function mintCourseNFTs(uint256 courseId, uint256 quantity) external {
-        require(_isApprovedOrOwner(msg.sender, courseId), "Not owner of course");
+        require(
+            _isApprovedOrOwner(msg.sender, courseId),
+            "Not owner of course"
+        );
         Course storage course = courses[courseId];
-        require(course.creator == address(this), "Course must be owned by creator");
+        require(
+            course.creator == address(this),
+            "Course must be owned by creator"
+        );
 
         // Mint the specified quantity of NFTs
         for (uint256 i = 0; i < quantity; i++) {
@@ -92,8 +119,16 @@ contract CoursePlatform is ERC721Enumerable, Ownable {
     }
 
     // Override _beforeTokenTransfer to ensure only course owner can transfer
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override {
-        require(from == address(0) || from == courses[tokenId].owner, "Can only transfer if you own the course");
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override {
+        require(
+            from == address(0) || from == courses[tokenId].owner,
+            "Can only transfer if you own the course"
+        );
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 }
